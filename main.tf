@@ -8,14 +8,14 @@ resource "azurerm_virtual_network" "aks" {
   name                = var.virtual_network_name
   location            = azurerm_resource_group.aks.location
   resource_group_name = azurerm_resource_group.aks.name
-  address_space       = ["10.224.0.0/12"]
+  address_space       = var.virtual_network_cidr
 }
 
 resource "azurerm_subnet" "aks" {
   name                 = var.subnet_name
   virtual_network_name = azurerm_virtual_network.aks.name
   resource_group_name  = azurerm_resource_group.aks.name
-  address_prefixes     = ["10.224.0.0/16"]
+  address_prefixes     = var.subnet_cidr
 }
 
 # AKS
@@ -28,18 +28,19 @@ resource "azurerm_kubernetes_cluster" "aks" {
   kubernetes_version = var.aks_k8s_version
 
   # Basic
-  dns_prefix = "terraform"
+  dns_prefix = var.aks_dns_prefix == null ? "terraform" : var.aks_dns_prefix
+
 
   default_node_pool {
     name                 = "system"
     type                 = "VirtualMachineScaleSets"
     zones                = [1, 2, 3]
-    vm_size              = "Standard_DS2_v2"
+    vm_size              = var.system_nodepool_sku == null ? "Standard_DS2_v2" : var.system_nodepool_sku
     vnet_subnet_id       = azurerm_subnet.aks.id
-    auto_scaling_enabled = true
-    max_count            = 3
-    min_count            = 1
-    node_count           = 2
+    auto_scaling_enabled = var.system_nodepool_auto_scaling_enabled == null ? true : false
+    node_count           = var.system_nodepool_auto_scaling_enabled != false ? 2 : null
+    max_count            = var.system_nodepool_auto_scaling_enabled != false ? 3 : null
+    min_count            = var.system_nodepool_auto_scaling_enabled != false ? 1 : null
     max_pods             = 110
   }
 
