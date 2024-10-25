@@ -32,15 +32,15 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
 
   default_node_pool {
-    name                 = "system"
+    name                 = var.system_node_pool_profile.node_pool_name
     type                 = "VirtualMachineScaleSets"
     zones                = [1, 2, 3]
-    vm_size              = var.system_nodepool_sku == null ? "Standard_DS2_v2" : var.system_nodepool_sku
+    vm_size              = var.system_node_pool_profile.node_pool_sku
     vnet_subnet_id       = azurerm_subnet.aks.id
-    auto_scaling_enabled = var.system_nodepool_auto_scaling_enabled == null ? true : false
-    node_count           = var.system_nodepool_auto_scaling_enabled != false ? 2 : null
-    max_count            = var.system_nodepool_auto_scaling_enabled != false ? 3 : null
-    min_count            = var.system_nodepool_auto_scaling_enabled != false ? 1 : null
+    auto_scaling_enabled = var.system_node_pool_profile.cluster_autoscaler_enabled
+    node_count           = var.system_node_pool_profile.cluster_autoscaler_enabled == false ? 2 : var.system_node_pool_profile.node_pool_count < 4 && var.system_node_pool_profile.node_pool_count >= 2 ? var.system_node_pool_profile.node_pool_count : 2
+    max_count            = var.system_node_pool_profile.cluster_autoscaler_enabled == false ? null : 4
+    min_count            = var.system_node_pool_profile.cluster_autoscaler_enabled == false ? null : 2
     max_pods             = 110
   }
 
@@ -51,11 +51,10 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
   # Network
   network_profile {
-    network_plugin    = "azure"
-    network_mode      = "transparent"
-    network_policy    = "calico"
-    service_cidr      = "172.16.0.0/16"
-    dns_service_ip    = "172.16.0.100"
+    network_plugin    = var.network_profile.network_plugin
+    network_policy    = var.network_profile.network_policy
+    service_cidr      = var.network_profile.service_cidr
+    dns_service_ip    = var.network_profile.dns_service_ip
     outbound_type     = "loadBalancer"
     load_balancer_sku = "standard"
   }
@@ -67,6 +66,18 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
   # # AKS Azure Policy
   # azure_policy_enabled = true
+}
+
+# user nodepool
+resource "azurerm_kubernetes_cluster_node_pool" "aks" {
+  count                 = length(var.user_node_pool_profile) > 0 ? 1 : 0
+  name                  = var.user_node_pool_profile.node_pool_name
+  kubernetes_cluster_id = azurerm_kubernetes_cluster.aks.id
+  vm_size               = var.user_node_pool_profile.node_pool_sku
+  auto_scaling_enabled  = var.user_node_pool_profile.cluster_autoscaler_enabled
+  node_count            = var.user_node_pool_profile.cluster_autoscaler_enabled == false ? 2 : var.user_node_pool_profile.node_pool_count < 4 && var.user_node_pool_profile.node_pool_count >= 2 ? var.user_node_pool_profile.node_pool_count : 2
+  max_count             = var.user_node_pool_profile.cluster_autoscaler_enabled != false ? 4 : null
+  min_count             = var.user_node_pool_profile.cluster_autoscaler_enabled != false ? 2 : null
 }
 
 # ACR

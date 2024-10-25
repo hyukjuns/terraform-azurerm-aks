@@ -28,3 +28,7 @@ output "aks_key_vault_secrets_provider" {
 output "aks_identity" {
   value = azurerm_kubernetes_cluster.aks.identity
 }
+
+output "aks_kubelet_identity" {
+  value = azurerm_kubernetes_cluster.aks.kubelet_identity
+}

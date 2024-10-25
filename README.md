@@ -13,3 +13,7 @@
 # Bash etc.
 export ARM_SUBSCRIPTION_ID=00000000-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 ```
+
+### Ref
+
+- [terraform-docs](https://terraform-docs.io/user-guide/introduction/)
