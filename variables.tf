@@ -41,7 +41,7 @@ variable "system_node_pool_profile" {
     node_pool_name     = string
     node_pool_sku      = string
     node_pool_count    = number
-    cluster_autoscaler = bool
+    cluster_autoscaler_enabled = bool
   })
   description = "시스템 노드풀 설정"
   default = {
@@ -78,7 +78,7 @@ variable "user_node_pool_profile" {
     node_pool_name     = string
     node_pool_sku      = string
     node_pool_count    = number
-    cluster_autoscaler = bool
+    cluster_autoscaler_enabled = bool
   })
   description = "시스템 노드풀 설정"
   default = {
